@@ -3,16 +3,16 @@
 	"contentVersion": "1.0.0.0",
 	"parameters": {
 		"_artifactsLocation": {
-			"value": "https://raw.githubusercontent.com/Microsoft/openshift-origin/master/"
+			"value": "https://raw.githubusercontent.com/Microsoft/openshift-origin/master"
 		},
 		"masterVmSize": {
-			"value": "Standard_DS3_v2"
+			"value": "Standard_D4s_v3"
 		},
 		"infraVmSize": {
-			"value": "Standard_DS3_v2"
+			"value": "Standard_D4s_v3"
 		},
 		"nodeVmSize": {
-			"value": "Standard_DS3_v2"
+			"value": "Standard_D4s_v3"
 		},
 		"storageKind": {
 			"value": "managed"
@@ -24,10 +24,10 @@
 			"value": 3
 		},
 		"infraInstanceCount": {
-			"value": 2
+			"value": 3
 		},
 		"nodeInstanceCount": {
-			"value": 1
+			"value": 2
 		},
 		"dataDiskSize": {
 			"value": 128
@@ -39,12 +39,9 @@
 			"value": "ThisIsYourSampleSecret!ShouldStayLocal!"
 		},
 		"enableMetrics": {
-			"value": "false"
+			"value": "true"
 		},
 		"enableLogging": {
-			"value": "false"
-		},
-		"enableCockpit": {
 			"value": "false"
 		},
 		"sshPublicKey": {

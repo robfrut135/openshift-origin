@@ -4,20 +4,25 @@
 
 The master branch will now contain the most current release of OpenShift Origin with experimental items.  This may cause instability but will include new things or try new things.
 
-We will now have branches for the stable releases:
-- Release-3.6
-- Release-3.7
+Re-introduced non-HA deployment option with 1 Master node.
+
+We now have branches for the stable releases:
+- release-3.6
+- release-3.7
+- release-3.9
+- azurestack-release-3.7
+- azurestack-release-3.9
 - etc.
 
 Bookmark [aka.ms/OpenShift](http://aka.ms/OpenShift) for future reference.
 
 For the **OpenShift Container Platform** refer to https://github.com/Microsoft/openshift-container-platform
 
+Additional documentation for deploying OpenShift in Azure can be found here: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/openshift-get-started
+
 Change log located in CHANGELOG.md
 
-## OpenShift Origin 3.7 with Username / Password
-
-Due to some issues, this template does not enable the Service Catalog or the Template Service Broker.  We will enable this in a future update once the issue is resolved.
+## OpenShift Origin 3.9 with Username / Password
 
 To view all the default templates, please select from the openshift project.
 
@@ -26,14 +31,14 @@ This template deploys OpenShift Origin with basic username / password for authen
 |Resource           |Properties                                                                                                                          |
 |-------------------|------------------------------------------------------------------------------------------------------------------------------------|
 |Virtual Network   		|**Address prefix:** 10.0.0.0/8<br />**Master subnet:** 10.1.0.0/16<br />**Node subnet:** 10.2.0.0/16                      |
-|Master Load Balancer	|2 probes and 2 rules for TCP 8443 and TCP 9090 <br/> NAT rules for SSH on Ports 2200-220X                                           |
+|Master Load Balancer	|2 probes and 2 rules for TCP 443 and TCP 9090 <br/> NAT rules for SSH on Ports 2200-220X                                           |
 |Infra Load Balancer	|3 probes and 3 rules for TCP 80, TCP 443 and TCP 9090 									                                             |
 |Public IP Addresses	|OpenShift Master public IP attached to Master Load Balancer<br />OpenShift Router public IP attached to Infra Load Balancer            |
 |Storage Accounts <br />Unmanaged Disks  	|1 Storage Account for Master VMs <br />1 Storage Account for Infra VMs<br />2 Storage Accounts for Node VMs<br />2 Storage Accounts for Diagnostics Logs <br />1 Storage Account for Private Docker Registry<br />1 Storage Account for Persistent Volumes  |
 |Storage Accounts <br />Managed Disks      |2 Storage Accounts for Diagnostics Logs <br />1 Storage Account for Private Docker Registry |
 |Network Security Groups|1 Network Security Group Master VMs<br />1 Network Security Group for Infra VMs<br />1 Network Security Group for Node VMs  |
 |Availability Sets      |1 Availability Set for Master VMs<br />1 Availability Set for Infra VMs<br />1 Availability Set for Node VMs  |
-|Virtual Machines   	|3 or 5 Masters. First Master is used to run Ansible Playbook to install OpenShift<br />2 or 3 Infra nodes<br />User-defined number of Nodes (1 to 30)<br />All VMs include a single attached data disk for Docker thin pool logical volume|
+|Virtual Machines   	|1, 3 or 5 Masters. First Master is used to run Ansible Playbook to install OpenShift<br />1, 2 or 3 Infra nodes<br />User-defined number of Nodes (1 to 30)<br />All VMs include a single attached data disk for Docker thin pool logical volume|
 
 If you have a Red Hat subscription and would like to deploy an OpenShift Container Platform (formerly OpenShift Enterprise) cluster, please visit: https://github.com/Microsoft/openshift-container-platform
 
@@ -110,34 +115,36 @@ The appId is used for the aadClientId parameter.
 
 ### azuredeploy.Parameters.json File Explained
 
-1.  _artifactsLocation: The base URL where artifacts required by this template are located. If you are using your own fork of the repo and want the deployment to pick up artifacts from your fork, update this value appropriately (user and branch), for example, change from `https://raw.githubusercontent.com/Microsoft/openshift-origin/master/` to `https://raw.githubusercontent.com/YourUser/openshift-origin/YourBranch/`
-2.  masterVmSize: Size of the Master VM. Select from one of the allowed VM sizes listed in the azuredeploy.json file
-3.  infraVmSize: Size of the Infra VM. Select from one of the allowed VM sizes listed in the azuredeploy.json file
-3.  nodeVmSize: Size of the Node VM. Select from one of the allowed VM sizes listed in the azuredeploy.json file
-4.  storageKind: The type of storage to be used. Value is either "managed" or "unmanaged"
-5.  openshiftClusterPrefix: Cluster Prefix used to configure hostnames for all nodes - master, infra and nodes. Between 1 and 20 characters
-8.  masterInstanceCount: Number of Masters nodes to deploy
-8.  infraInstanceCount: Number of infra nodes to deploy
-9.  nodeInstanceCount: Number of Nodes to deploy
-9.  dataDiskSize: Size of data disk to attach to nodes for Docker volume - valid sizes are 128 GB, 512 GB and 1023 GB
-10. adminUsername: Admin username for both OS login and OpenShift login
-11. openshiftPassword: Password for OpenShift login
-11. enableMetrics: Enable Metrics - value is either "true" or "false"
-11. enableLogging: Enable Logging - value is either "true" or "false"
-11. enableCockpit: Enable Cockpit - value is either "true" or "false"
-12. sshPublicKey: Copy your SSH Public Key here
-14. keyVaultResourceGroup: The name of the Resource Group that contains the Key Vault
-15. keyVaultName: The name of the Key Vault you created
-16. keyVaultSecret: The Secret Name you used when creating the Secret (that contains the Private Key)
-18. enableAzure: Enable Azure Cloud Provider - value is either "true" or "false"
-18. aadClientId: Azure Active Directory Client ID also known as Application ID for Service Principal
-18. aadClientSecret: Azure Active Directory Client Secret for Service Principal
-17. defaultSubDomainType: This will either be nipio (if you don't have your own domain) or custom if you have your own domain that you would like to use for routing
-18. defaultSubDomain: The wildcard DNS name you would like to use for routing if you selected custom above.  If you selected nipio above, then this field will be ignored
+| Property                          | Description                                                                                                                                                                                                                                                                                                                                          | Valid options                                                                        | Default value |
+|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|---------------|
+`_artifactsLocation`| The base URL where artifacts required by this template are located. If you are using your own fork of the repo and want the deployment to pick up artifacts from your fork, update this value appropriately (user and branch), for example, change from `https://raw.githubusercontent.com/Microsoft/openshift-origin/master/` to `https://raw.githubusercontent.com/YourUser/openshift-origin/YourBranch/`
+`masterVmSize`| Size of the Master VM. Select from one of the allowed VM sizes listed in the azuredeploy.json file ||
+`infraVmSize`| Size of the Infra VM. Select from one of the allowed VM sizes listed in the azuredeploy.json file ||
+`nodeVmSize`| Size of the Node VM. Select from one of the allowed VM sizes listed in the azuredeploy.json file||
+`storageKind`| The type of storage to be used. | - "managed"<br>- "unmanaged"|
+`openshiftClusterPrefix`| Cluster Prefix used to configure hostnames for all nodes - master, infra and nodes. Between 1 and 20 characters||
+`masterInstanceCount`| Number of Masters nodes to deploy||
+`infraInstanceCount`| Number of infra nodes to deploy||
+`nodeInstanceCount`| Number of Nodes to deploy||
+`dataDiskSize`| Size of data disk to attach to nodes for Docker volume.|- 32 GB<br>- 64 GB<br>- 128 GB<br>- 256 GB<br>- 512 GB<br>- 1024 GB<br>- 2048 GB|
+`adminUsername`| Admin username for both OS login and OpenShift login||
+`openshiftPassword`| Password for OpenShift login||
+`enableMetrics`| Enable Metrics|- "true"<br>- "false|
+`enableLogging`| Enable Logging|- "true"<br>- "false|
+`sshPublicKey`| Copy your SSH Public Key here||
+`keyVaultResourceGroup`| The name of the Resource Group that contains the Key Vault||
+`keyVaultName`| The name of the Key Vault you created||
+`keyVaultSecret`| The Secret Name you used when creating the Secret (that contains the Private Key)||
+`enableAzure`| Enable Azure Cloud Provider|- "true"<br>- "false|
+`aadClientId`| Azure Active Directory Client ID also known as Application ID for Service Principal||
+`aadClientSecret`| Azure Active Directory Client Secret for Service Principal||
+`defaultSubDomainType`| This will either be nipio (if you don't have your own domain) or custom if you have your own domain that you would like to use for routing||
+`defaultSubDomain`| The wildcard DNS name you would like to use for routing if you selected custom above.  If you selected nipio above, then this field will be ignored||
 
 ## Deploy Template
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2Fopenshift-origin%2Fmaster%2Fazuredeploy.json" target="_blank"><img src="http://azuredeploy.net/deploybutton.png"/></a>
+<a href="https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2Fopenshift-origin%2Fmaster%2Fazuredeploy.json" target="_blank"><img src="http://azuredeploy.net/AzureGov.png"/></a>
 
 Once you have collected all of the prerequisites for the template, you can deploy the template by populating the *azuredeploy.parameters.local.json* file and executing Resource Manager deployment commands with PowerShell or the CLI.
 
@@ -154,7 +161,7 @@ az group deployment create --resource-group OpenShiftTestRG --template-file azur
 
 Monitor deployment via CLI or Portal and get the console URL from outputs of successful deployment which will look something like (if using sample parameters file and "West US 2" location):
 
-`https://me-master1.westus2.cloudapp.azure.com:8443/console`
+`https://me-master1.westus2.cloudapp.azure.com/console`
 
 The cluster will use self-signed certificates. Accept the warning and proceed to the login page.
 
@@ -189,7 +196,10 @@ Few options you have
   c. openshiftNodeLoadBalancerFQDN node load balancer<br/>
 2. Get the deployment output data
   a. portal.azure.com -> choose 'Resource groups' select your group select 'Deployments' and there the deployment 'Microsoft.Template'. As output from the deployment it contains information about the openshift console url, ssh command and load balancer url.<br/>
-  b. With the Azure CLI : azure group deployment list &lt;resource group name>
+  b. With the Azure CLI : 
+    ```bash
+    az group deployment list -g <resource group name>
+    ```
 3. Add additional users. you can find much detail about this in the openshift.org documentation under 'Cluster Administration' and 'Managing Users'. This installation uses htpasswd as the identity provider. To add more users, ssh in to each master node and execute following command:
    ```sh
    sudo htpasswd /etc/origin/master/htpasswd user1
